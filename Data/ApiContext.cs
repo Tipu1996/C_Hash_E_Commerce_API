@@ -1,5 +1,4 @@
 using eCommerceAPI.Models;
-using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 
 namespace eCommerceAPI.Data
@@ -7,11 +6,13 @@ namespace eCommerceAPI.Data
     public class ApiContext
     {
         private readonly IConfiguration _configuration;
-        public IMongoCollection<Item> Items { get; set; }
-        public IMongoCollection<User> Users { get; set; }
-        public IMongoCollection<CompletedOrder> CompletedOrders { get; set; }
-        public IMongoCollection<ShoppingCartItem> ShoppingCartItems { get; set; }
-        public IMongoCollection<Category> Categories { get; set; }
+        public IMongoCollection<Items> Items { get; set; }
+        public IMongoCollection<Users> Users { get; set; }
+        public IMongoCollection<CompletedOrders> CompletedOrders { get; set; }
+        public IMongoCollection<CompletedOrderItems> CompletedOrderItems { get; set; }
+        public IMongoCollection<ShoppingCarts> ShoppingCarts { get; set; }
+        public IMongoCollection<ShoppingCartItems> ShoppingCartItems { get; set; }
+        public IMongoCollection<Categories> Categories { get; set; }
         public ApiContext(IConfiguration configuration)
         {
             _configuration = configuration;
@@ -19,11 +20,13 @@ namespace eCommerceAPI.Data
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase("E-Commerce");
 
-            Items = database.GetCollection<Item>("Items");
-            Users = database.GetCollection<User>("Users");
-            CompletedOrders = database.GetCollection<CompletedOrder>("CompletedOrders");
-            ShoppingCartItems = database.GetCollection<ShoppingCartItem>("ShoppingItems");
-            Categories = database.GetCollection<Category>("Categories");
+            Items = database.GetCollection<Items>("Items");
+            Users = database.GetCollection<Users>("Users");
+            CompletedOrders = database.GetCollection<CompletedOrders>("CompletedOrders");
+            CompletedOrderItems = database.GetCollection<CompletedOrderItems>("CompletedOrderItems");
+            ShoppingCarts = database.GetCollection<ShoppingCarts>("ShoppingCarts");
+            ShoppingCartItems = database.GetCollection<ShoppingCartItems>("ShoppingCartItems");
+            Categories = database.GetCollection<Categories>("Categories");
         }
     }
 }

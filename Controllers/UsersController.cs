@@ -47,6 +47,15 @@ namespace eCommerceAPI.Controllers
             else return Ok(search);
         }
 
+        [HttpGet("search")]
+        public IActionResult GetUserByName([FromQuery] string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return BadRequest("Name parameter is required");
+            var search = _usersCollection.Find(x => x.Name.Contains(name)).ToList();
+            if (search == null) return new JsonResult(NotFound());
+            else return Ok(search);
+        }
+
         [HttpGet("{id}")]
         public IActionResult GetUserById(string id)
         {

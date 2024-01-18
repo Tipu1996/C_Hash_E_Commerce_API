@@ -1,6 +1,9 @@
 using eCommerceAPI.Data;
 using eCommerceAPI.Models;
+using eCommerceAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 using MongoDB.Driver;
 
 namespace eCommerceAPI.Controllers
@@ -14,17 +17,19 @@ namespace eCommerceAPI.Controllers
         private readonly IMongoCollection<ShoppingCartItems> _shoppingCartItemsCollection;
         private readonly IMongoCollection<CompletedOrders> _completedOrdersCollection;
         private readonly IMongoCollection<CompletedOrderItems> _completedOrderItemsCollection;
-        public UsersController(ApiContext apiContext)
+        private readonly JwtService _jwtService;
+        public UsersController(ApiContext apiContext, JwtService jwtService)
         {
             _usersCollection = apiContext.Users;
             _shoppingCartsCollection = apiContext.ShoppingCarts;
             _shoppingCartItemsCollection = apiContext.ShoppingCartItems;
             _completedOrdersCollection = apiContext.CompletedOrders;
             _completedOrderItemsCollection = apiContext.CompletedOrderItems;
+            _jwtService = jwtService;
         }
 
         [HttpPost]
-        public IActionResult AddNewUser(Users newUser)
+        public IActionResult RegisterUser(Users newUser)
         {
             var newShoppingCart = new ShoppingCarts { ItemsList = new List<ShoppingCartItems>() };
             _shoppingCartsCollection.InsertOne(newShoppingCart);
@@ -36,31 +41,51 @@ namespace eCommerceAPI.Controllers
             newUser.CompletedOrdersReference = newCompletedOrder.Id;
 
             _usersCollection.InsertOne(newUser);
-            return new JsonResult(Ok(newUser));
+            var jwtToken = _jwtService.GenerateJwtToken(newUser);
+            return Ok(new { newUser, JWT = jwtToken });
+        }
+
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginModel loginModel)
+        {
+            var search = _usersCollection.Find(x => x.Email == loginModel.Email && x.Password == loginModel.Password).FirstOrDefault();
+            if (search == null) return NotFound();
+            var jwtToken = _jwtService.GenerateJwtToken(search);
+            return Ok(jwtToken);
         }
 
         [HttpGet]
         public IActionResult GetAllUsers()
         {
             var search = _usersCollection.Find(_ => true).ToList();
-            if (search == null || search.Count == 0) return new JsonResult(NotFound());
+            if (search == null || search.Count == 0) return NotFound();
             else return Ok(search);
         }
 
-        [HttpGet("search")]
+        [HttpGet("profile"), Authorize]
+        public IActionResult GetMyProfile()
+        {
+            var userId = User.FindFirst("Id")?.Value;
+            if (string.IsNullOrEmpty(userId)) return BadRequest("unable to retrieve user Information");
+            var search = _usersCollection.Find(x => x.Id == userId).FirstOrDefault();
+            if (search == null) return NotFound();
+            else return Ok(search);
+        }
+
+        [HttpGet("searchbyname")]
         public IActionResult GetUserByName([FromQuery] string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return BadRequest("Name parameter is required");
             var search = _usersCollection.Find(x => x.Name.Contains(name)).ToList();
-            if (search == null) return new JsonResult(NotFound());
+            if (search == null) return NotFound();
             else return Ok(search);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetUserById(string id)
         {
-            var search = _usersCollection.Find(_ => true).FirstOrDefault();
-            if (search == null) return new JsonResult(NotFound());
+            var search = _usersCollection.Find(x => x.Id == id).FirstOrDefault();
+            if (search == null) return NotFound();
             else return Ok(search);
         }
 

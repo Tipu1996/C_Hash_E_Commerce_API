@@ -30,10 +30,10 @@ namespace eCommerceAPI.Controllers
         [HttpPost("register")]
         public IActionResult RegisterUser(Users newUser)
         {
-            var newShoppingCart = new ShoppingCarts { ItemsList = new List<ShoppingCartItems>() };
+            var newShoppingCart = new ShoppingCarts { ItemsList = new List<CartItem>() };
             _shoppingCartsCollection.InsertOne(newShoppingCart);
 
-            var newCompletedOrder = new CompletedOrders { ItemsList = new List<CompletedOrderItems>() };
+            var newCompletedOrder = new CompletedOrders { ItemsList = new List<BoughtItem>() };
             _completedOrdersCollection.InsertOne(newCompletedOrder);
 
             newUser.ShoppingCartReference = newShoppingCart.Id;
@@ -87,10 +87,7 @@ namespace eCommerceAPI.Controllers
         {
             var searchedUser = _usersCollection.Find(x => x.Id == id).FirstOrDefault();
             if (searchedUser == null) return NotFound();
-            else
-            {
-                return Ok(searchedUser);
-            }
+            else return Ok(searchedUser);
         }
 
         [HttpDelete("{id}")]

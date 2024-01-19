@@ -10,7 +10,9 @@ namespace eCommerceAPI.Models
         public string? Id { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
-        public List<string>? ItemId { get; set; }
-        public int Quantity { get; set; }
+        public string? UserReference { get; set; }
+
+        [BsonRepresentation(BsonType.ObjectId)]
+        public List<string>? ItemsList { get; set; }
     }
 }

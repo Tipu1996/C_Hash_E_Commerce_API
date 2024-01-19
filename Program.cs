@@ -27,12 +27,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtOptions.Issuer,
             ValidAudience = jwtOptions.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(signingKeyBytes)
+            IssuerSigningKey = new SymmetricSecurityKey(signingKeyBytes),
+
+            // Add the following lines to specify the roles and policies
+            RoleClaimType = "IsAdmin",
+            // Set the name of the policy to apply
+            NameClaimType = "sub",
         };
     });
 
 // 👇 Configuring the Authorization Service
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("IsAdmin", "true");
+    });
+});
 
 builder.Services.AddScoped<JwtService>();
 

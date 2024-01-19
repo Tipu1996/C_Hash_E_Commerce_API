@@ -26,7 +26,7 @@ namespace eCommerceAPI.Services
                 Subject = new ClaimsIdentity(new[]
                 {
                 new Claim("Id", user.Id),
-                new Claim("IsAdmin", user.IsAdmin.ToString()),
+                new Claim("IsAdmin", user.IsAdmin? "true":"false"),
                 new Claim(JwtRegisteredClaimNames.Sub, user.Name),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
@@ -49,5 +49,4 @@ namespace eCommerceAPI.Services
             return tokenHandler.WriteToken(token);
         }
     }
-
 }

@@ -30,10 +30,11 @@ namespace eCommerceAPI.Controllers
         [HttpPost("register")]
         public IActionResult RegisterUser(Users newUser)
         {
-            var newShoppingCart = new ShoppingCarts { ItemsList = new List<CartItem>() };
+            _usersCollection.InsertOne(newUser);
+            var newShoppingCart = new ShoppingCarts { ItemsList = new List<CartItem>(), UserReference = newUser.Id };
             _shoppingCartsCollection.InsertOne(newShoppingCart);
 
-            var newCompletedOrder = new CompletedOrders { ItemsList = new List<BoughtItem>() };
+            var newCompletedOrder = new CompletedOrders { ItemsList = new List<BoughtItem>(), UserReference = newUser.Id };
             _completedOrdersCollection.InsertOne(newCompletedOrder);
 
             newUser.ShoppingCartReference = newShoppingCart.Id;
@@ -41,7 +42,7 @@ namespace eCommerceAPI.Controllers
             newUser.IsAdmin = false;
 
 
-            _usersCollection.InsertOne(newUser);
+            _usersCollection.ReplaceOne(x => x.Id == newUser.Id, newUser);
             var jwtToken = _jwtService.GenerateJwtToken(newUser);
             return Ok(new { newUser, JWT = jwtToken, });
         }
@@ -90,7 +91,7 @@ namespace eCommerceAPI.Controllers
             else return Ok(searchedUser);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}"), Authorize(Policy = "AdminOnly")]
         public IActionResult DeleteUserById(string id)
         {
             var searchedUser = _usersCollection.Find(x => x.Id == id).FirstOrDefault();

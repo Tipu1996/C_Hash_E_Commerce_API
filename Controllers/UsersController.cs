@@ -3,7 +3,6 @@ using eCommerceAPI.Models;
 using eCommerceAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
 using MongoDB.Driver;
 
 namespace eCommerceAPI.Controllers
@@ -28,7 +27,7 @@ namespace eCommerceAPI.Controllers
             _jwtService = jwtService;
         }
 
-        [HttpPost]
+        [HttpPost("register")]
         public IActionResult RegisterUser(Users newUser)
         {
             var newShoppingCart = new ShoppingCarts { ItemsList = new List<ShoppingCartItems>() };
@@ -39,10 +38,12 @@ namespace eCommerceAPI.Controllers
 
             newUser.ShoppingCartReference = newShoppingCart.Id;
             newUser.CompletedOrdersReference = newCompletedOrder.Id;
+            newUser.IsAdmin = false;
+
 
             _usersCollection.InsertOne(newUser);
             var jwtToken = _jwtService.GenerateJwtToken(newUser);
-            return Ok(new { newUser, JWT = jwtToken });
+            return Ok(new { newUser, JWT = jwtToken, });
         }
 
         [HttpPost("login")]
@@ -84,18 +85,23 @@ namespace eCommerceAPI.Controllers
         [HttpGet("{id}")]
         public IActionResult GetUserById(string id)
         {
-            var search = _usersCollection.Find(x => x.Id == id).FirstOrDefault();
-            if (search == null) return NotFound();
-            else return Ok(search);
+            var searchedUser = _usersCollection.Find(x => x.Id == id).FirstOrDefault();
+            if (searchedUser == null) return NotFound();
+            else
+            {
+                return Ok(searchedUser);
+            }
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteUserById(string id)
         {
-            var search = _usersCollection.Find(x => x.Id == id).FirstOrDefault();
-            if (search == null) return (NotFound());
+            var searchedUser = _usersCollection.Find(x => x.Id == id).FirstOrDefault();
+            if (searchedUser == null) return (NotFound());
             else
             {
+                _completedOrdersCollection.DeleteOne(x => x.Id == searchedUser.CompletedOrdersReference);
+                _shoppingCartsCollection.DeleteOne(x => x.Id == searchedUser.ShoppingCartReference);
                 _usersCollection.DeleteOne(x => x.Id == id);
                 return NoContent();
             }

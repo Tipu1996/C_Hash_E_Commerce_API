@@ -26,6 +26,7 @@ namespace eCommerceAPI.Services
                 Subject = new ClaimsIdentity(new[]
                 {
                 new Claim("Id", user.Id),
+                new Claim("IsAdmin", user.IsAdmin.ToString()),
                 new Claim(JwtRegisteredClaimNames.Sub, user.Name),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
@@ -42,8 +43,8 @@ namespace eCommerceAPI.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
             // Log the generated token
-            Console.WriteLine("Generated JWT Token:");
-            Console.WriteLine(tokenHandler.WriteToken(token));
+            // Console.WriteLine("Generated JWT Token:");
+            // Console.WriteLine(tokenHandler.WriteToken(token));
 
             return tokenHandler.WriteToken(token);
         }

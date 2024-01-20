@@ -105,7 +105,7 @@ namespace eCommerceAPI.Controllers
             {
                 _usersCollection.UpdateOne(filter, updateDefinition);
             }
-            return NoContent();
+            return StatusCode(304, "No modifications provided");
         }
 
         [HttpGet]
@@ -147,14 +147,11 @@ namespace eCommerceAPI.Controllers
         public IActionResult DeleteUserById(string id)
         {
             var searchedUser = _usersCollection.Find(x => x.Id == id).FirstOrDefault();
-            if (searchedUser == null) return (NotFound());
-            else
-            {
-                _completedOrdersCollection.DeleteOne(x => x.Id == searchedUser.CompletedOrdersReference);
-                _shoppingCartsCollection.DeleteOne(x => x.Id == searchedUser.ShoppingCartReference);
-                _usersCollection.DeleteOne(x => x.Id == id);
-                return NoContent();
-            }
+            if (searchedUser == null) return NotFound();
+            _completedOrdersCollection.DeleteOne(x => x.Id == searchedUser.CompletedOrdersReference);
+            _shoppingCartsCollection.DeleteOne(x => x.Id == searchedUser.ShoppingCartReference);
+            _usersCollection.DeleteOne(x => x.Id == id);
+            return NoContent();
         }
     }
 }

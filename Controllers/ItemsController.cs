@@ -43,12 +43,72 @@ namespace eCommerceAPI.Controllers
             return Ok(item);
         }
 
-        [HttpGet("Id")]
+        [HttpGet("{Id}")]
         public IActionResult GetItemById(string id)
         {
             var search = _itemsCollection.Find(x => x.Id == id).FirstOrDefault();
             if (search == null) return NotFound();
             return Ok(search);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateItemDetails(string id, Items updatedItem)
+        {
+            var filter = Builders<Items>.Filter.Eq(x => x.Id, id);
+            var updateDefinition = Builders<Items>.Update.Combine();
+            if (!string.IsNullOrEmpty(updatedItem.Name))
+            {
+                updateDefinition = updateDefinition.Set(x => x.Name, updatedItem.Name);
+            }
+            if (!string.IsNullOrEmpty(updatedItem.Description))
+            {
+                updateDefinition = updateDefinition.Set(x => x.Description, updatedItem.Description);
+            }
+            if (!string.IsNullOrEmpty(updatedItem.Company))
+            {
+                updateDefinition = updateDefinition.Set(x => x.Company, updatedItem.Company);
+            }
+            if (!string.IsNullOrEmpty(updatedItem.CategoryId))
+            {
+                updateDefinition = updateDefinition.Set(x => x.CategoryId, updatedItem.CategoryId);
+            }
+            if (updatedItem.Price > 0)
+            {
+                updateDefinition = updateDefinition.Set(x => x.Price, updatedItem.Price);
+            }
+            if (updatedItem.Discount >= 0)
+            {
+                updateDefinition = updateDefinition.Set(x => x.Discount, updatedItem.Discount);
+            }
+            if (updatedItem.Inventory >= 0)
+            {
+                updateDefinition = updateDefinition.Set(x => x.Inventory, updatedItem.Inventory);
+            }
+            if (!string.IsNullOrEmpty(updatedItem.Imageurl))
+            {
+                updateDefinition = updateDefinition.Set(x => x.Imageurl, updatedItem.Imageurl);
+            }
+            if (!string.IsNullOrEmpty(updatedItem.Specifications))
+            {
+                updateDefinition = updateDefinition.Set(x => x.Specifications, updatedItem.Specifications);
+            }
+            // Apply the update only if there are modifications
+            if (updateDefinition != Builders<Items>.Update.Combine())
+            {
+                _itemsCollection.UpdateOne(filter, updateDefinition);
+                return NoContent();
+            }
+            // No modifications, return NotModified
+            return StatusCode(304, "No modifications provided");
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteItemById(string id)
+        {
+            var search = _itemsCollection.Find(x => x.Id == id).FirstOrDefault();
+            if (search == null) return NotFound();
+            _itemsCollection.FindOneAndDelete(x => x.Id == id);
+            return NoContent();
         }
     }
 }

@@ -9,32 +9,40 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 var jwtOptions = builder.Configuration.GetSection("JwtOptions").Get<JwtOptions>();
-builder.Services.AddSingleton(jwtOptions);
+if (jwtOptions is not null)
+{
+    builder.Services.AddSingleton(jwtOptions);
 
-// 👇 Configuring the Authentication Service
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(opts =>
-    {
-        //convert the string signing key to byte array
-        byte[] signingKeyBytes = Encoding.UTF8
-            .GetBytes(jwtOptions.SigningKey);
-
-        opts.TokenValidationParameters = new TokenValidationParameters
+    // 👇 Configuring the Authentication Service
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(opts =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtOptions.Issuer,
-            ValidAudience = jwtOptions.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(signingKeyBytes),
+            //convert the string signing key to byte array
+            byte[] signingKeyBytes = Encoding.UTF8
+                .GetBytes(jwtOptions.SigningKey);
 
-            // Add the following lines to specify the roles and policies
-            RoleClaimType = "IsAdmin",
-            // Set the name of the policy to apply
-            NameClaimType = "sub",
-        };
-    });
+            opts.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtOptions.Issuer,
+                ValidAudience = jwtOptions.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(signingKeyBytes),
+
+                // Add the following lines to specify the roles and policies
+                RoleClaimType = "IsAdmin",
+                // Set the name of the policy to apply
+                NameClaimType = "sub",
+            };
+        });
+}
+else
+{
+    // Handle the case when JwtOptions is not found in configuration
+    throw new InvalidOperationException("JwtOptions not found in configuration.");
+}
 
 // 👇 Configuring the Authorization Service
 builder.Services.AddAuthorization(options =>

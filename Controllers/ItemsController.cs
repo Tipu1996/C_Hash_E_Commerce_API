@@ -68,9 +68,9 @@ namespace eCommerceAPI.Controllers
             {
                 updateDefinition = updateDefinition.Set(x => x.Company, updatedItem.Company);
             }
-            if (!string.IsNullOrEmpty(updatedItem.CategoryId))
+            if (!string.IsNullOrEmpty(updatedItem.Category))
             {
-                updateDefinition = updateDefinition.Set(x => x.CategoryId, updatedItem.CategoryId);
+                updateDefinition = updateDefinition.Set(x => x.Category, updatedItem.Category);
             }
             if (updatedItem.Price > 0)
             {

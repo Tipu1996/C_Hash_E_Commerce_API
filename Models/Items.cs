@@ -12,7 +12,7 @@ namespace eCommerceAPI.Models
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? Company { get; set; }
-        public string? CategoryId { get; set; }
+        public string? Category { get; set; }
         public int Price { get; set; }
         public int Discount { get; set; }
         public int Inventory { get; set; }

@@ -4,6 +4,7 @@ using eCommerceAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
+using ZstdSharp.Unsafe;
 
 namespace eCommerceAPI.Controllers
 {
@@ -12,6 +13,7 @@ namespace eCommerceAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IMongoCollection<Users> _usersCollection;
+        private readonly IMongoCollection<Items> _itemsCollection;
         private readonly IMongoCollection<ShoppingCarts> _shoppingCartsCollection;
         private readonly IMongoCollection<ShoppingCartItems> _shoppingCartItemsCollection;
         private readonly IMongoCollection<CompletedOrders> _completedOrdersCollection;
@@ -20,6 +22,7 @@ namespace eCommerceAPI.Controllers
         public UsersController(ApiContext apiContext, JwtService jwtService)
         {
             _usersCollection = apiContext.Users;
+            _itemsCollection = apiContext.Items;
             _shoppingCartsCollection = apiContext.ShoppingCarts;
             _shoppingCartItemsCollection = apiContext.ShoppingCartItems;
             _completedOrdersCollection = apiContext.CompletedOrders;
@@ -54,6 +57,55 @@ namespace eCommerceAPI.Controllers
             if (search == null) return NotFound();
             var jwtToken = _jwtService.GenerateJwtToken(search);
             return Ok(jwtToken);
+        }
+
+        [HttpPut("update"), Authorize]
+        public IActionResult UpdateUser(Users updatedUser)
+        {
+            var userId = User.FindFirst("Id")?.Value;
+            if (string.IsNullOrEmpty(userId)) return BadRequest("The user's ID cannot be retrieved from the JWT");
+            var filter = Builders<Users>.Filter.Eq(x => x.Id, userId);
+            var updateDefinition = Builders<Users>.Update.Combine();
+            if (updatedUser.Name != null)
+            {
+                updateDefinition = updateDefinition.Set(search => search.Name, updatedUser.Name);
+            }
+            if (updatedUser.Email != null)
+            {
+                updateDefinition = updateDefinition.Set(search => search.Email, updatedUser.Email);
+            }
+            if (updatedUser.Password != null)
+            {
+                updateDefinition = updateDefinition.Set(search => search.Password, updatedUser.Password);
+            }
+            if (updatedUser.UserAddress != null)
+            {
+                if (updatedUser.UserAddress.Street != null)
+                {
+                    updateDefinition = updateDefinition.Set(search => search.UserAddress.Street, updatedUser.UserAddress.Street);
+                }
+                if (updatedUser.UserAddress.ZipCode != null)
+                {
+                    updateDefinition = updateDefinition.Set(search => search.UserAddress.ZipCode, updatedUser.UserAddress.ZipCode);
+                }
+                if (updatedUser.UserAddress.City != null)
+                {
+                    updateDefinition = updateDefinition.Set(search => search.UserAddress.City, updatedUser.UserAddress.City);
+                }
+                if (updatedUser.UserAddress.Country != null)
+                {
+                    updateDefinition = updateDefinition.Set(search => search.UserAddress.Country, updatedUser.UserAddress.Country);
+                }
+                if (updatedUser.UserAddress.PhoneNumber != null)
+                {
+                    updateDefinition = updateDefinition.Set(search => search.UserAddress.PhoneNumber, updatedUser.UserAddress.PhoneNumber);
+                }
+            }
+            if (updateDefinition != Builders<Users>.Update.Combine())
+            {
+                _usersCollection.UpdateOne(filter, updateDefinition);
+            }
+            return NoContent();
         }
 
         [HttpGet]

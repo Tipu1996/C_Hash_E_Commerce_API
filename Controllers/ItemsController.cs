@@ -27,7 +27,7 @@ namespace eCommerceAPI.Controllers
             _completedOrderItemsCollection = apiContext.CompletedOrderItems;
             _jwtService = jwtService;
         }
-        
+
         [HttpGet]
         public IActionResult GetAllItems()
         {
@@ -36,6 +36,19 @@ namespace eCommerceAPI.Controllers
             return Ok(allItems);
         }
 
-        // [Http]
+        [HttpPost]
+        public IActionResult AddNewItem(Items item)
+        {
+            _itemsCollection.InsertOne(item);
+            return Ok(item);
+        }
+
+        [HttpGet("Id")]
+        public IActionResult GetItemById(string id)
+        {
+            var search = _itemsCollection.Find(x => x.Id == id).FirstOrDefault();
+            if (search == null) return NotFound();
+            return Ok(search);
+        }
     }
 }

@@ -12,11 +12,12 @@ namespace eCommerceAPI.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string UserReference { get; set; } = string.Empty;
 
-        public List<CartItem>? ItemsList { get; set; }
+        public List<CartItem> ItemsList { get; set; } = [];
     }
     public class CartItem
     {
-        public ObjectId ItemId { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string ItemId { get; set; } = string.Empty;
         public int Quantity { get; set; }
     }
 }

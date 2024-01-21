@@ -15,18 +15,14 @@ namespace eCommerceAPI.Controllers
         private readonly IMongoCollection<Users> _usersCollection;
         private readonly IMongoCollection<Items> _itemsCollection;
         private readonly IMongoCollection<ShoppingCarts> _shoppingCartsCollection;
-        private readonly IMongoCollection<ShoppingCartItems> _shoppingCartItemsCollection;
         private readonly IMongoCollection<CompletedOrders> _completedOrdersCollection;
-        private readonly IMongoCollection<CompletedOrderItems> _completedOrderItemsCollection;
         private readonly JwtService _jwtService;
         public UsersController(ApiContext apiContext, JwtService jwtService)
         {
             _usersCollection = apiContext.Users;
             _itemsCollection = apiContext.Items;
             _shoppingCartsCollection = apiContext.ShoppingCarts;
-            _shoppingCartItemsCollection = apiContext.ShoppingCartItems;
             _completedOrdersCollection = apiContext.CompletedOrders;
-            _completedOrderItemsCollection = apiContext.CompletedOrderItems;
             _jwtService = jwtService;
         }
 
@@ -54,7 +50,7 @@ namespace eCommerceAPI.Controllers
         public IActionResult Login([FromBody] LoginModel loginModel)
         {
             var search = _usersCollection.Find(x => x.Email == loginModel.Email && x.Password == loginModel.Password).FirstOrDefault();
-            if (search == null) return NotFound();
+            if (search == null) return NotFound("unable to retrieve user Information");
             var jwtToken = _jwtService.GenerateJwtToken(search);
             return Ok(jwtToken);
         }
@@ -112,7 +108,7 @@ namespace eCommerceAPI.Controllers
         public IActionResult GetAllUsers()
         {
             var search = _usersCollection.Find(_ => true).ToList();
-            if (search == null || search.Count == 0) return NotFound();
+            if (search == null || search.Count == 0) return NotFound("unable to retrieve user Information");
             else return Ok(search);
         }
 
@@ -122,7 +118,7 @@ namespace eCommerceAPI.Controllers
             var userId = User.FindFirst("Id")?.Value;
             if (string.IsNullOrEmpty(userId)) return BadRequest("unable to retrieve user Information");
             var search = _usersCollection.Find(x => x.Id == userId).FirstOrDefault();
-            if (search == null) return NotFound();
+            if (search == null) return NotFound("unable to retrieve user Information");
             else return Ok(search);
         }
 
@@ -131,7 +127,7 @@ namespace eCommerceAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(name)) return BadRequest("Name parameter is required");
             var search = _usersCollection.Find(x => x.Name.Contains(name)).ToList();
-            if (search == null) return NotFound();
+            if (search == null) return NotFound("unable to retrieve user Information");
             else return Ok(search);
         }
 
@@ -139,7 +135,7 @@ namespace eCommerceAPI.Controllers
         public IActionResult GetUserById(string id)
         {
             var searchedUser = _usersCollection.Find(x => x.Id == id).FirstOrDefault();
-            if (searchedUser == null) return NotFound();
+            if (searchedUser == null) return NotFound("unable to retrieve user Information");
             else return Ok(searchedUser);
         }
 
@@ -147,11 +143,81 @@ namespace eCommerceAPI.Controllers
         public IActionResult DeleteUserById(string id)
         {
             var searchedUser = _usersCollection.Find(x => x.Id == id).FirstOrDefault();
-            if (searchedUser == null) return NotFound();
+            if (searchedUser == null) return NotFound("unable to retrieve user Information");
             _completedOrdersCollection.DeleteOne(x => x.Id == searchedUser.CompletedOrdersReference);
             _shoppingCartsCollection.DeleteOne(x => x.Id == searchedUser.ShoppingCartReference);
             _usersCollection.DeleteOne(x => x.Id == id);
             return NoContent();
+        }
+
+        [HttpGet("shopping-cart"), Authorize]
+        public IActionResult GetShoppingCart()
+        {
+            var userId = User.FindFirst("Id")?.Value;
+            if (string.IsNullOrEmpty(userId)) return BadRequest("unable to retrieve user Information");
+            var search = _usersCollection.Find(x => x.Id == userId).FirstOrDefault();
+            if (search == null) return BadRequest("unable to retrieve user Information");
+            var searchCart = _shoppingCartsCollection.Find(x => x.Id == search.ShoppingCartReference).FirstOrDefault();
+            return Ok(searchCart);
+        }
+
+        [HttpGet("completed-orders"), Authorize]
+        public IActionResult GetCompletedOrders()
+        {
+            var userId = User.FindFirst("Id")?.Value;
+            if (string.IsNullOrEmpty(userId)) return BadRequest("unable to retrieve user Information");
+            var search = _usersCollection.Find(x => x.Id == userId).FirstOrDefault();
+            if (search == null) return BadRequest("unable to retrieve user Information");
+            var completedOrders = _completedOrdersCollection.Find(search.CompletedOrdersReference);
+            return Ok(completedOrders);
+        }
+
+        [HttpPost("add-to-cart/{id}")]
+        public IActionResult AddToCart(string id)
+        {
+            // search for the user using the jwt and find in mongodb
+            var userId = User.FindFirst("Id")?.Value;
+            if (string.IsNullOrEmpty(userId)) return BadRequest("unable to retrieve user Information");
+            var search = _usersCollection.Find(x => x.Id == userId).FirstOrDefault();
+            if (search == null) return BadRequest("unable to retrieve user Information");
+            // find shoppingcart in mongodb
+            var shoppingCart = _shoppingCartsCollection.Find(x => x.Id == search.ShoppingCartReference).FirstOrDefault();
+            var existingItem = shoppingCart.ItemsList.FirstOrDefault(x => x.ItemId == id);
+            // find item in mongodb
+            var itemInDb = _itemsCollection.Find(x => x.Id == id).FirstOrDefault();
+            itemInDb.Inventory -= 1;
+            if (existingItem == null)
+            {
+                var itemToAdd = new CartItem { ItemId = id, Quantity = 1 };
+                shoppingCart.ItemsList.Add(itemToAdd);
+            }
+            else existingItem.Quantity += 1;
+            _itemsCollection.ReplaceOne(x => x.Id == id, itemInDb);
+            _shoppingCartsCollection.ReplaceOne(x => x.Id == shoppingCart.Id, shoppingCart);
+            return Ok();
+        }
+        [HttpPost("remove-from-cart/{id}")]
+        public IActionResult RemoveFromCart(string id)
+        {
+            // search for the user using the jwt and find in mongodb
+            var userId = User.FindFirst("Id")?.Value;
+            if (string.IsNullOrEmpty(userId)) return BadRequest("unable to retrieve user Information");
+            var search = _usersCollection.Find(x => x.Id == userId).FirstOrDefault();
+            if (search == null) return BadRequest("unable to retrieve user Information");
+            // find shoppingcart in mongodb
+            var shoppingCart = _shoppingCartsCollection.Find(x => x.Id == search.ShoppingCartReference).FirstOrDefault();
+            var existingItem = shoppingCart.ItemsList.FirstOrDefault(x => x.ItemId == id);
+            // find item in mongodb
+            if (existingItem == null)
+            {
+                return BadRequest("The Item does not exist in your cart");
+            }
+            else existingItem.Quantity -= 1;
+            var itemInDb = _itemsCollection.Find(x => x.Id == id).FirstOrDefault();
+            itemInDb.Inventory += 1;
+            _itemsCollection.ReplaceOne(x => x.Id == id, itemInDb);
+            _shoppingCartsCollection.ReplaceOne(x => x.Id == shoppingCart.Id, shoppingCart);
+            return Ok();
         }
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -16,7 +17,8 @@ namespace eCommerceAPI.Models
     }
     public class BoughtItem
     {
-        public ObjectId ItemId { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string ItemId { get; set; } = string.Empty;
         public int Quantity { get; set; }
     }
 }

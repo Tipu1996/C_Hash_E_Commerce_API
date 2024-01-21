@@ -32,7 +32,7 @@ namespace eCommerceAPI.Controllers
         public IActionResult GetAllItems()
         {
             var allItems = _itemsCollection.Find(_ => true).ToList();
-            if (allItems == null || allItems.Count == 0) return NotFound();
+            if (allItems == null || allItems.Count == 0) return NotFound("Did not find any items in the Database");
             return Ok(allItems);
         }
 
@@ -106,7 +106,7 @@ namespace eCommerceAPI.Controllers
         public IActionResult DeleteItemById(string id)
         {
             var search = _itemsCollection.Find(x => x.Id == id).FirstOrDefault();
-            if (search == null) return NotFound();
+            if (search == null) return NotFound("Unable to delete item from database because it does not exist");
             _itemsCollection.FindOneAndDelete(x => x.Id == id);
             return NoContent();
         }

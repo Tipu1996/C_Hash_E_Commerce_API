@@ -13,18 +13,14 @@ namespace eCommerceAPI.Controllers
         private readonly IMongoCollection<Users> _usersCollection;
         private readonly IMongoCollection<Items> _itemsCollection;
         private readonly IMongoCollection<ShoppingCarts> _shoppingCartsCollection;
-        private readonly IMongoCollection<ShoppingCartItems> _shoppingCartItemsCollection;
         private readonly IMongoCollection<CompletedOrders> _completedOrdersCollection;
-        private readonly IMongoCollection<CompletedOrderItems> _completedOrderItemsCollection;
         private readonly JwtService _jwtService;
         public ItemsController(ApiContext apiContext, JwtService jwtService)
         {
             _usersCollection = apiContext.Users;
             _itemsCollection = apiContext.Items;
             _shoppingCartsCollection = apiContext.ShoppingCarts;
-            _shoppingCartItemsCollection = apiContext.ShoppingCartItems;
             _completedOrdersCollection = apiContext.CompletedOrders;
-            _completedOrderItemsCollection = apiContext.CompletedOrderItems;
             _jwtService = jwtService;
         }
 

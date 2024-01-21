@@ -144,6 +144,17 @@ namespace eCommerceAPI.Controllers
         {
             var searchedUser = _usersCollection.Find(x => x.Id == id).FirstOrDefault();
             if (searchedUser == null) return NotFound("unable to retrieve user Information");
+            var shoppingCart = _shoppingCartsCollection.Find(x => x.Id == searchedUser.ShoppingCartReference).FirstOrDefault();
+            if (shoppingCart.ItemsList != null)
+            {
+                foreach (var item in shoppingCart.ItemsList)
+                {
+                    var itemInInventory = _itemsCollection.Find(x => x.Id == item.ItemId).FirstOrDefault();
+                    itemInInventory.Inventory += item.Quantity;
+                    _itemsCollection.ReplaceOne(x => x.Id == item.ItemId, itemInInventory);
+                }
+            }
+            var completedOrder = _completedOrdersCollection.Find(x => x.Id == searchedUser.CompletedOrdersReference).FirstOrDefault();
             _completedOrdersCollection.DeleteOne(x => x.Id == searchedUser.CompletedOrdersReference);
             _shoppingCartsCollection.DeleteOne(x => x.Id == searchedUser.ShoppingCartReference);
             _usersCollection.DeleteOne(x => x.Id == id);

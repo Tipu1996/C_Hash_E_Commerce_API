@@ -27,7 +27,6 @@ This project is an e-commerce RESTful API built using ASP.NET Core (C#) and Mong
 - `Items`: Represents product details, including name, description, price, inventory, and more.
 - `ShoppingCarts`: Stores user-specific shopping cart information, including cart items.
 - `CompletedOrders`: Stores user-specific completed orders information, including bought items.
-- `Categories`: Represents categories for better item organization.
 
 ### Controllers
 - `UsersController`: Handles user-related operations, including registration, login, profile management, and address updates.

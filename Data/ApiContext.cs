@@ -9,10 +9,7 @@ namespace eCommerceAPI.Data
         public IMongoCollection<Items> Items { get; set; }
         public IMongoCollection<Users> Users { get; set; }
         public IMongoCollection<CompletedOrders> CompletedOrders { get; set; }
-        public IMongoCollection<CompletedOrderItems> CompletedOrderItems { get; set; }
         public IMongoCollection<ShoppingCarts> ShoppingCarts { get; set; }
-        public IMongoCollection<ShoppingCartItems> ShoppingCartItems { get; set; }
-        public IMongoCollection<Categories> Categories { get; set; }
         public ApiContext(IConfiguration configuration)
         {
             _configuration = configuration;
@@ -23,10 +20,7 @@ namespace eCommerceAPI.Data
             Items = database.GetCollection<Items>("Items");
             Users = database.GetCollection<Users>("Users");
             CompletedOrders = database.GetCollection<CompletedOrders>("CompletedOrders");
-            CompletedOrderItems = database.GetCollection<CompletedOrderItems>("CompletedOrderItems");
             ShoppingCarts = database.GetCollection<ShoppingCarts>("ShoppingCarts");
-            ShoppingCartItems = database.GetCollection<ShoppingCartItems>("ShoppingCartItems");
-            Categories = database.GetCollection<Categories>("Categories");
         }
     }
 }

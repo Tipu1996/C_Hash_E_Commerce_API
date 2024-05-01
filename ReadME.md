@@ -43,6 +43,20 @@ This project is an e-commerce RESTful API built using ASP.NET Core (C#) and Mong
 2. Set up your MongoDB connection in `appsettings.json`.
 3. Run the API locally.
 
+## Accessing Swagger UI (OpenAPI Documentation)
+
+To explore the API endpoints and test them interactively, Swagger UI is provided. Follow these steps to access Swagger UI:
+
+1. Ensure your application is running locally.
+
+2. Open a web browser.
+
+3. Navigate to the following URL:   http://localhost:5000/swagger/index.html
+
+4. Once the page loads, you'll see the Swagger UI interface, which lists all available endpoints along with descriptions and parameters. You can use Swagger UI to make test requests to your API directly from the browser.
+
+5. Explore the different endpoints, parameters, and responses to understand how your API works.
+
 ## Dependencies
 - ASP.NET Core
 - MongoDB
